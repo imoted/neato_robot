@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Generic driver for the Neato XV-11 Robot Vacuum
 # Copyright (c) 2010 University at Albany. All right reserved.
@@ -129,15 +129,19 @@ class xv11():
 
     def setTestMode(self, value):
         """ Turn test mode on/off. """
-        self.port.write("testmode " + value + "\n")
+        # convert to byte array
+        command = ("testmode " + value + "\n").encode('utf-8')
+        self.port.write(command)
 
     def setLDS(self, value):
-        self.port.write("setldsrotation " + value + "\n")
+        command = ("setldsrotation " + value + "\n").encode('utf-8')
+        self.port.write(command)
 
     def requestScan(self):
         """ Ask neato for an array of scan reads. """
         self.port.flushInput()
-        self.port.write("getldsscan\n")
+        command = ("getldsscan\n").encode('utf-8')
+        self.port.write(command)
 
     def getScanRanges(self):
         """ Read values of a scan -- call requestScan first! """
@@ -147,9 +151,10 @@ class xv11():
             line = self.port.readline()
         except:
             return []
-        while line.split(",")[0] != "AngleInDegrees":
+        while line.decode('utf-8').split(",")[0] != "AngleInDegrees":
             try:
                 line = self.port.readline()
+                print(line)
             except:
                 return []
         while angle < 360:
@@ -158,6 +163,7 @@ class xv11():
             except:
                 pass
             vals = vals.split(",")
+            print(vals)
             #print angle, vals
             try:
                 a = int(vals[0])
@@ -173,7 +179,7 @@ class xv11():
         #This is a work-around for a bug in the Neato API. The bug is that the
         #robot won't stop instantly if a 0-velocity command is sent - the robot
         #could continue moving for up to a second. To work around this bug, the
-        #first time a 0-velocity is sent in, a velocity of 1,1,1 is sent. Then, 
+        #first time a 0-velocity is sent in, a velocity of 1,1,1 is sent. Then,
         #the zero is sent. This effectively causes the robot to stop instantly.
         if (int(l) == 0 and int(r) == 0 and int(s) == 0):
             if (not self.stop_state):
@@ -190,9 +196,10 @@ class xv11():
         """ Update values for motors in the self.state dictionary.
             Returns current left, right encoder values. """
         self.port.flushInput()
-        self.port.write("getmotors\n")
+        command = ("getmotors\n").encode('utf-8')
+        self.port.write(command)
         line = self.port.readline()
-        while line.split(",")[0] != "Parameter":
+        while line.decode('utf-8').split(",")[0] != "Parameter":
             try:
                 line = self.port.readline()
             except:
@@ -266,4 +273,3 @@ class xv11():
     #ButtonAmberDim - Start Button Amber Dim (mutually exclusive of other Button options)
     #ButtonGreenDim - Start Button Green Dim (mutually exclusive of other Button options)
     #ButtonOff - Start Button Off
-

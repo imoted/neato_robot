@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # ROS node for the Neato Robot Vacuum
 # Copyright (c) 2010 University at Albany. All right reserved.
@@ -10,10 +10,10 @@
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the University at Albany nor the names of its 
-#       contributors may be used to endorse or promote products derived 
+#     * Neither the name of the University at Albany nor the names of its
+#       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -59,9 +59,9 @@ class NeatoNode:
         self.odomPub = rospy.Publisher('odom', Odometry, queue_size=10)
         self.odomBroadcaster = TransformBroadcaster()
 
-        self.cmd_vel = [0,0] 
+        self.cmd_vel = [0,0]
 
-    def spin(self):        
+    def spin(self):
         encoders = [0,0]
 
         self.x = 0                  # position in xy plane
@@ -71,20 +71,20 @@ class NeatoNode:
 
         # things that don't ever change
         scan_link = rospy.get_param('~frame_id','base_laser_link')
-        scan = LaserScan(header=rospy.Header(frame_id=scan_link)) 
+        scan = LaserScan(header=rospy.Header(frame_id=scan_link))
         scan.angle_min = 0
         scan.angle_max = 6.26
         scan.angle_increment = 0.017437326
         scan.range_min = 0.020
         scan.range_max = 5.0
         odom = Odometry(header=rospy.Header(frame_id="odom"), child_frame_id='base_link')
-    
+
         # main loop of driver
         r = rospy.Rate(5)
         self.robot.requestScan()
         while not rospy.is_shutdown():
             # prepare laser scan
-            scan.header.stamp = rospy.Time.now()    
+            scan.header.stamp = rospy.Time.now()
             #self.robot.requestScan()
             scan.ranges = self.robot.getScanRanges()
 
@@ -93,10 +93,10 @@ class NeatoNode:
 
             # send updated movement commands
             self.robot.setMotors(self.cmd_vel[0], self.cmd_vel[1], max(abs(self.cmd_vel[0]),abs(self.cmd_vel[1])))
-            
+
             # ask for the next scan while we finish processing stuff
             self.robot.requestScan()
-            
+
             # now update position information
             dt = (scan.header.stamp - then).to_sec()
             then = scan.header.stamp
@@ -104,7 +104,7 @@ class NeatoNode:
             d_left = (left - encoders[0])/1000.0
             d_right = (right - encoders[1])/1000.0
             encoders = [left, right]
-            
+
             dx = (d_left+d_right)/2
             dth = (d_right-d_left)/(BASE_WIDTH/1000.0)
 
@@ -139,18 +139,17 @@ class NeatoNode:
 
         # shut down
         self.robot.setLDS("off")
-        self.robot.setTestMode("off") 
+        self.robot.setTestMode("off")
 
     def cmdVelCb(self,req):
         x = req.linear.x * 1000
-        th = req.angular.z * (BASE_WIDTH/2) 
+        th = req.angular.z * (BASE_WIDTH/2)
         k = max(abs(x-th),abs(x+th))
         # sending commands higher than max speed will fail
         if k > MAX_SPEED:
             x = x*MAX_SPEED/k; th = th*MAX_SPEED/k
         self.cmd_vel = [ int(x-th) , int(x+th) ]
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
     robot = NeatoNode()
     robot.spin()
-
