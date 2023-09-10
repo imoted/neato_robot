@@ -1,3 +1,9 @@
+## note
+
+* 家のneatoでは正常に動かない。
+* command体系が違う模様でlidarの値も取れなかった。
+* python3への適用は行った。
+
 ## Neato Drivers
 
 This repository contains the Neato ROS drivers, catkinized, and ready for ROS Groovy and newer.
@@ -15,4 +21,3 @@ You can check this out into your catin workspace as follows:
 
  * 2dnav_neato is now named neato_2dnav in order to comply with newer naming conventions.
  * neato_driver directory structure is slightly changed to comply with catkin_python_setup requirements.
-
